@@ -147,7 +147,7 @@ MIT License – libre para usar, modificar y compartir.
 
 ## 👨‍💻 Autor
 
-Desarrollado por [TuNombre](https://github.com/tu-usuario)
+Desarrollado por [davgalle](https://github.com/4trastos)
 Hecho con ❤️ para los cadetes de 42.
 
 ````
