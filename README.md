@@ -191,5 +191,3 @@ cd common_core/libft
 
 ---
 
-¿Quieres que te prepare también la configuración del workflow `ci.yml` de GitHub Actions, incluyendo validación de Norminette y tests automáticos?
-```
