@@ -1,7 +1,5 @@
 # 🧪 42 Project Tester
 
-[![CI Status](https://github.com/tu-usuario/42-project-tester/actions/workflows/ci.yml/badge.svg)](https://github.com/tu-usuario/42-project-tester/actions)
-[![Norminette](https://img.shields.io/badge/Norminette-passed-brightgreen)](https://github.com/42School/norminette)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Un tester modular y automatizado para los proyectos del currículo de [42 Network](https://42.fr):
