@@ -18,18 +18,17 @@ Un tester modular y automatizado para los proyectos del currículo de [42 Networ
 - Libft
 - ft_printf
 - get_next_line
-- Born2beroot
 - so_long
+- pipex
 - push_swap
 - minishell
 - Philosophers
 - ...
 
 ### 🚧 Outer Core (próximamente)
-- NetPractice
-- Inception
-- cub3d
-- ft_transcendence
+- Libasm
+- nm
+- ...
 
 ### 🚧 Exams
 - C Piscine Rush
