@@ -22,7 +22,7 @@ select opt in "${options[@]}"; do
       ./testers/get_next_line/test.sh
       break ;;
     "ft_printf")
-      echo -e "${YELLOW}🚧 ft_printf aún no está implementado${NC}"
+      ./testers/ft_printf/test.sh
       break ;;
     "so_long")
       echo -e "${YELLOW}🚧 so_long aún no está implementado${NC}"
