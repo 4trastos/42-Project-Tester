@@ -1,0 +1,7 @@
+rm -f ft_printf.o ft_printf_char.o ft_printf_numbers.o
+rm -f libftprintf.a
+gcc -Wall -Wextra -Werror   -c -o ft_printf.o ft_printf.c
+gcc -Wall -Wextra -Werror   -c -o ft_printf_char.o ft_printf_char.c
+gcc -Wall -Wextra -Werror   -c -o ft_printf_numbers.o ft_printf_numbers.c
+gcc -c -Wall -Wextra -Werror ft_printf.c ft_printf_char.c ft_printf_numbers.c
+ar rcs libftprintf.a ft_printf.o ft_printf_char.o ft_printf_numbers.o

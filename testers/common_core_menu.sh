@@ -11,7 +11,7 @@ echo -e "${CYAN}📦 𝟜𝟚 Common Core Projects${NC}"
 echo
 
 PS3="Elige el proyecto que deseas testear: "
-options=("Libft" "get_next_line" "ft_printf" "so_long" "pipex" "push_swap" "Volver")
+options=("Libft" "get_next_line" "ft_printf" "pipex" "so_long" "push_swap" "Volver")
 
 select opt in "${options[@]}"; do
   case $opt in
@@ -24,11 +24,11 @@ select opt in "${options[@]}"; do
     "ft_printf")
       ./testers/ft_printf/test.sh
       break ;;
+    "pipex")
+      ./testers/pipex/test.sh
+      break ;;
     "so_long")
       echo -e "${YELLOW}🚧 so_long aún no está implementado${NC}"
-      break ;;
-    "pipex")
-      echo -e "${YELLOW}🚧 pipex aún no está implementado${NC}"
       break ;;
     "push_swap")
       echo -e "${YELLOW}🚧 push_swap aún no está implementado${NC}"
