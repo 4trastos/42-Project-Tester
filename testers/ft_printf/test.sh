@@ -13,6 +13,24 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ERROR_LOG="${SCRIPT_DIR}/printf_errors_$(date +"%Y%m%d_%H%M%S").log"
 EXEC_NAME="${EXEC_NAME:-printf_test}"
 
+# Variable para almacenar el manual de printf y evitar llamarlo múltiples veces
+PRINTF_MAN_PAGE=""
+MAN_PRINTF_FETCHED=false
+
+# Función para obtener el manual de printf
+get_printf_man_page() {
+    if [ "$MAN_PRINTF_FETCHED" = false ]; then
+        echo -e "${CYAN}\n--- Manual de la función printf() ---\n${NC}" >> "$ERROR_LOG"
+        # Usamos col -b para eliminar caracteres de formato y obtener texto plano
+        man 3 printf | col -b >> "$ERROR_LOG" 2>&1
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}❌ No se pudo obtener el manual de printf. Asegúrate de tener 'man' instalado y las páginas de manual de C.${NC}" >> "$ERROR_LOG"
+        fi
+        PRINTF_MAN_PAGE=$(cat "$ERROR_LOG" | awk '/^--- Manual de la función printf\(\) ---/{flag=1;next}/^--- Fin del Manual ---/{flag=0}flag')
+        MAN_PRINTF_FETCHED=true
+    fi
+}
+
 # Función para encontrar ft_printf
 find_printf_project() {
     local base_path="${1:-$HOME}"
@@ -37,8 +55,9 @@ compile_printf() {
 
     if [[ -f "${dir}/Makefile" ]]; then
         echo -e "${GREEN}✅ Makefile encontrado. Compilando...${NC}"
+        # Capturamos la salida de make en el log de errores
         (cd "$dir" && make fclean && make) >> "$ERROR_LOG" 2>&1 || {
-            echo -e "${YELLOW}⚠ Make falló. Intentando compilación manual...${NC}"
+            echo -e "${YELLOW}⚠ Make falló. Intentando compilación manual...${NC}" >> "$ERROR_LOG"
         }
 
         LIBRARY=$(find "$dir" -name "libftprintf.a" -o -name "*.a" -print -quit)
@@ -49,7 +68,7 @@ compile_printf() {
         fi
     fi
 
-    echo -e "${YELLOW}⚠ Compilando manualmente...${NC}"
+    echo -e "${YELLOW}⚠ No se encontró librería o Makefile falló. Compilando manualmente...${NC}"
     SRC_FILES=$(find "$dir" -name "ft_printf*.c" ! -name "*bonus*" 2>/dev/null | tr '\n' ' ')
 
     if [[ -z "$SRC_FILES" ]]; then
@@ -73,42 +92,58 @@ main() {
     echo -e "${GREEN}✅ Proyecto encontrado en: ${PRINTF_DIR}${NC}"
 
     if ! compile_printf "$PRINTF_DIR"; then
-        echo -e "${RED}❌ Error de compilación. Ver ${ERROR_LOG}${NC}"
+        echo -e "${RED}❌ Error de compilación. Consulta ${ERROR_LOG} para más detalles.${NC}"
         exit 1
     fi
 
     echo -e "${CYAN}🧪 Compilando tester...${NC}"
+    # Redirigimos la salida de compilación del tester al log de errores
     gcc -Wall -Wextra -Werror \
         "${SCRIPT_DIR}/test_main.c" \
         "${COMPILE_ARGS[@]}" \
         -o "${EXEC_NAME}" 2>> "$ERROR_LOG"
 
     if [[ $? -ne 0 ]]; then
-        echo -e "${RED}❌ Error al compilar el tester. Ver ${ERROR_LOG}${NC}"
+        echo -e "${RED}❌ Error al compilar el tester. Consulta ${ERROR_LOG} para más detalles.${NC}"
         exit 1
     fi
 
     echo -e "${GREEN}🚀 Ejecutando tests...${NC}"
-    TEST_OUTPUT=$(./"${EXEC_NAME}")
-    echo "$TEST_OUTPUT"
+    # Ejecutamos el tester y procesamos su salida línea por línea
+    # La salida del tester (OK/KO) va a stderr, así que la capturamos
+    TEST_RAW_OUTPUT=$(./"${EXEC_NAME}" 2>&1)
+    
+    # Imprimimos la salida del tester y, si hay KOs, el manual
+    echo "$TEST_RAW_OUTPUT" | while IFS= read -r line; do
+        echo "$line"
+        if [[ "$line" == *"[KO]"* ]]; then
+            if [ "$MAN_PRINTF_FETCHED" = false ]; then
+                get_printf_man_page
+                echo -e "${MAGENTA}\n--- Extracto del Manual de printf() (para referencia) ---\n${NC}"
+                echo "$PRINTF_MAN_PAGE"
+                echo -e "${MAGENTA}\n--- Fin del Extracto del Manual ---\n${NC}"
+            fi
+        fi
+    done
 
-    TOTAL_TESTS=$(echo "$TEST_OUTPUT" | awk '/^Resumen:.*tests pasados/ {print $3}' | cut -d'/' -f2)
-    PASSED_TESTS=$(echo "$TEST_OUTPUT" | awk '/^Resumen:.*tests pasados/ {print $3}' | cut -d'/' -f1)
+    # Extraemos el resumen final para el estado
+    TOTAL_TESTS=$(echo "$TEST_RAW_OUTPUT" | awk '/^Resumen:.*tests pasados/ {print $3}' | cut -d'/' -f2)
+    PASSED_TESTS=$(echo "$TEST_RAW_OUTPUT" | awk '/^Resumen:.*tests pasados/ {print $3}' | cut -d'/' -f1)
 
     TOTAL_TESTS=${TOTAL_TESTS:-0}
     PASSED_TESTS=${PASSED_TESTS:-0}
     FAILED_TESTS=$((TOTAL_TESTS - PASSED_TESTS))
 
     if [[ "$FAILED_TESTS" -ne 0 ]]; then
-        echo -e "${RED}❌ Algunos tests fallaron${NC}"
-        echo -e "${YELLOW}ℹ Ver detalles completos en la salida anterior o en: ${ERROR_LOG}${NC}"
+        echo -e "${RED}❌ Algunos tests fallaron. Consulta los detalles arriba y el log: ${ERROR_LOG}${NC}"
         exit 1
     else
         echo -e "${GREEN}✅ ¡Todos los tests pasaron correctamente! 🎉${NC}"
     fi
 
     rm -f "${EXEC_NAME}"
-    [[ -f "${PRINTF_DIR}/Makefile" ]] && (cd "$PRINTF_DIR" && make fclean >/dev/null)
+    # Limpiamos el proyecto ft_printf si tiene Makefile
+    [[ -f "${PRINTF_DIR}/Makefile" ]] && (cd "$PRINTF_DIR" && make fclean >/dev/null 2>&1)
 
     exit 0
 }
